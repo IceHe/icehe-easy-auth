@@ -1,9 +1,17 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestAdminPageExtendWeekButton(t *testing.T) {
+	page := renderAdminHTML([]User{{ID: 42, Name: "test", ExpiresAt: "2027-01-01T00:00:00Z", Permissions: "view", Domains: "*"}}, User{Name: "admin"})
+	if !strings.Contains(page, `action="/admin/users/42/extend-week"`) || !strings.Contains(page, `>延期一周</button>`) {
+		t.Fatal("admin page is missing the user's extend-week button")
+	}
+}
 
 func TestNormalizeAdminFormExpiresAtAcceptsDateTimeLocal(t *testing.T) {
 	location, err := time.LoadLocation("Asia/Shanghai")

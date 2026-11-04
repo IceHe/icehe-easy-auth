@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 )
 
 const userSelectColumns = `id, name, token, expires_at, remark, permissions, domains, created_at, updated_at, is_admin, deleted_at`
@@ -90,6 +91,31 @@ func (s *Server) updateUser(ctx context.Context, userID int64, payload normalize
 		return sql.ErrNoRows
 	}
 	s.tokenCache.Invalidate(existing.Token, payload.Token)
+	return nil
+}
+
+func (s *Server) extendUserWeek(ctx context.Context, userID int64) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var expiresAt, token string
+	if err := tx.QueryRowContext(ctx, `SELECT expires_at, token FROM users WHERE id = $1 AND deleted_at = '' FOR UPDATE`, userID).Scan(&expiresAt, &token); err != nil {
+		return err
+	}
+	parsed, err := parseISO(expiresAt)
+	if err != nil {
+		return err
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE users SET expires_at = $1, updated_at = $2 WHERE id = $3`, parsed.Add(7*24*time.Hour).Format(time.RFC3339Nano), nowISO(), userID); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	s.tokenCache.Invalidate(token)
 	return nil
 }
 

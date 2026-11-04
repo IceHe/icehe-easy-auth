@@ -32,6 +32,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /admin/users", s.handleAdminUsersCreate)
 	mux.HandleFunc("POST /admin/users/{userID}", s.handleAdminUsersUpdate)
 	mux.HandleFunc("POST /admin/users/{userID}/autosave", s.handleAdminUsersAutosave)
+	mux.HandleFunc("POST /admin/users/{userID}/extend-week", s.handleAdminUsersExtendWeek)
 	mux.HandleFunc("POST /admin/users/{userID}/delete", s.handleAdminUsersDelete)
 	mux.HandleFunc("POST /admin/users/{userID}/restore", s.handleAdminUsersRestore)
 

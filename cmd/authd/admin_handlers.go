@@ -311,6 +311,32 @@ func (s *Server) handleAdminUsersAutosave(w http.ResponseWriter, r *http.Request
 	writePlainText(w, http.StatusOK, "ok")
 }
 
+func (s *Server) handleAdminUsersExtendWeek(w http.ResponseWriter, r *http.Request) {
+	_, ok, err := s.adminFromSession(r)
+	if err != nil {
+		s.internalError(w, err)
+		return
+	}
+	if !ok {
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		return
+	}
+	userID, parsed := parsePathID(r.PathValue("userID"))
+	if !parsed {
+		http.NotFound(w, r)
+		return
+	}
+	if err := s.extendUserWeek(r.Context(), userID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			writePlainText(w, http.StatusNotFound, "用户不存在")
+			return
+		}
+		s.internalError(w, err)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
 func (s *Server) handleAdminUsersDelete(w http.ResponseWriter, r *http.Request) {
 	_, ok, err := s.adminFromSession(r)
 	if err != nil {

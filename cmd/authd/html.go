@@ -102,6 +102,9 @@ func renderAdminHTML(users []User, currentUser User) string {
                 </form>
                 <div class="ops-actions">
                   <button type="submit" form="update-form-%d">更新名称和token</button>
+                  <form method="post" action="/admin/users/%d/extend-week" onsubmit="return confirm('确认将该用户的 token 到期时间延后一周？');">
+                    <button type="submit">延期一周</button>
+                  </form>
                   %s
                 </div>
               </td>
@@ -124,6 +127,7 @@ func renderAdminHTML(users []User, currentUser User) string {
 				checkedAttr(permissionSet["manage"]),
 				checkedAttr(permissionSet["view"]),
 				checkedAttr(permissionSet["edit"]),
+				user.ID,
 				user.ID,
 				deleteHTML,
 			))
